@@ -5,7 +5,10 @@
                 id
                 data {
                     title
-                    content
+                    content {
+                        de
+                        en
+                    }
                 }
             }
         }
@@ -35,5 +38,5 @@
 
 <main>
     <h1>{QUERYRES.post.data.title}</h1>
-    {@html QUERYRES.post.data.content}
+    {@html QUERYRES.post.data.content.de}
 </main>

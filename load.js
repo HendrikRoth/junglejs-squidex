@@ -21,14 +21,29 @@ function getContent(access_token, base_url, app, schema) {
         method: "GET",
         headers: {Authorization: `Bearer ${access_token}`}
     })
-    .then(response => response.data.items.map(r => loadAssets(base_url, app, r)));
+    .then(response => response.data.items
+        .map(normalize)
+    //    .map(r => loadAssets(base_url, app, r))
+    );
 }
 
+function normalize(item) {
+    Object.keys(item.data).map(key => {
+        if (item.data[key].iv)
+            item.data[key] = item.data[key].iv;
+    });
+    delete item._links;
+    return item;
+}
+
+/*
+ * TODO
 function loadAssets(base_url, app, response) {
+    console.log(response);
     if (!response.data) return response;
 
     Object.entries(response.data).map(x => {
-        if (x[1].iv) {
+        if (x[1].iv && x[1].iv.fileSize > 0) {
             x[1].iv = x[1].iv.map(x => {
                 const path = "/static/assets/";
 
@@ -55,6 +70,7 @@ function loadAssets(base_url, app, response) {
 
     return response;
 }
+*/
 
 module.exports = async ({client_id, client_secret, base_url}) => {
     const access_token = await getToken(client_id, client_secret, base_url);

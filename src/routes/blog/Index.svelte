@@ -5,7 +5,6 @@
                 id
                 data {
                     title
-                    content
                 }
             }
         }
