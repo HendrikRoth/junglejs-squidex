@@ -2,10 +2,9 @@
     const QUERY = `
         query {
             posts {
+                slug
+                title
                 id
-                data {
-                    title
-                }
             }
         }
     `;
@@ -29,8 +28,8 @@
 
     {#each QUERYRES.posts as post}
         <article>
-            <h3>{{post.data.title}}</h3>
-            <a href="/blog/{post.id}">{post.data.title}</a>
+            <h3>{post.title}</h3>
+            <a href="/blog/{post.id}">{post.title}</a>
         </article>
     {/each}
 </main>

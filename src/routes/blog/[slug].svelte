@@ -1,14 +1,13 @@
 <script>
     const QUERY = `
         query {
-            post(id: "${QUERYPARAMS["id"]}") {
+            post(slug: "${QUERYPARAMS["slug"]}") {
                 id
-                data {
-                    title
-                    content {
-                        de
-                        en
-                    }
+                title
+                slug
+                content {
+                    de
+                    en
                 }
             }
         }
@@ -19,7 +18,7 @@
     const QUERYPARAMOPTS = `
         query {
             posts {
-                id
+                slug
             }
         }
     `;
@@ -33,10 +32,10 @@
 </style>
 
 <svelte:head>
-    <title>{QUERYRES.post.data.title}</title>
+    <title>{QUERYRES.post.title}</title>
 </svelte:head>
 
 <main>
-    <h1>{QUERYRES.post.data.title}</h1>
-    {@html QUERYRES.post.data.content.de}
+    <h1>{QUERYRES.post.title}</h1>
+    {@html QUERYRES.post.content.de}
 </main>

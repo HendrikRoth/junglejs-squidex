@@ -91,7 +91,8 @@ module.exports = async (args) => {
         },
         dataSources: [
             // name singular!
-            { format: "json", name: "post", items: await itemLoader("post"), queryArgs: { id: "String!" } }
+            { format: "json", name: "setting", items: await itemLoader("settings"), queryArgs: { id: "String!" } },
+            { format: "json", name: "post", items: await itemLoader("post", {assets: ["image"]}), queryArgs: { slug: "String!" } }
         ]
     }
 };

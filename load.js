@@ -14,66 +14,84 @@ function getToken(client_id, client_secret, base_url) {
     .then(response => response.data.access_token);
 }
 
-function getContent(access_token, base_url, app, schema) {
-    return axios.request({
-        url: `/api/content/${app}/${schema}`,
-        baseURL: base_url,
-        method: "GET",
-        headers: {Authorization: `Bearer ${access_token}`}
-    })
-    .then(response => response.data.items
-        .map(normalize)
-    //    .map(r => loadAssets(base_url, app, r))
-    );
+async function getContent(access_token, base_url, app, schema, options = {}) {
+    try {
+        const response = await axios.request({
+            url: `/api/content/${app}/${schema}`,
+            baseURL: base_url,
+            method: "GET",
+            headers: {Authorization: `Bearer ${access_token}`}
+        });
+
+        const items = Promise.all(
+            response.data.items
+                .map(normalize)
+                .map(item => loadAssets(base_url, app, item, options))
+            );
+
+        return items;
+    }
+    catch (err) {
+        throw new Error(err);
+    }
 }
 
 function normalize(item) {
+    const n = { id: item.id };
+
     Object.keys(item.data).map(key => {
         if (item.data[key].iv)
-            item.data[key] = item.data[key].iv;
+            n[key] = item.data[key].iv;
+        else
+            n[key] = item.data[key];
     });
-    delete item._links;
-    return item;
+
+    n.meta = item;
+
+    delete n.meta.id;
+    delete n.meta.data;
+    delete n.meta._links
+
+    return n;
 }
 
-/*
- * TODO
-function loadAssets(base_url, app, response) {
-    console.log(response);
-    if (!response.data) return response;
+async function download(base_url, app, x) {
+    const path = "/assets/";
+    const filename = path + x + ".png";
+    const fullpath = __dirname + "/static" + filename;
 
-    Object.entries(response.data).map(x => {
-        if (x[1].iv && x[1].iv.fileSize > 0) {
-            x[1].iv = x[1].iv.map(x => {
-                const path = "/static/assets/";
+    if (!fs.existsSync(fullpath)) {
+        const source = `${base_url}/api/assets/${app}/${x}?format=png&width=800`;
 
-                if (!fs.existsSync(__dirname + path + x)) {
-                    // file does not exist. download it.
-                    // TODO: thumbnails?
-                    const source = `${base_url}/api/assets/${app}/${x}`;
+        const resp = await axios({
+            method: "GET",
+            url: source,
+            responseType: "stream"
+        });
 
-                    axios
-                        .get(source, {responseType: "blob"})
-                        .then(fileBlob => {
-                            fs.writeFile(__dirname + path + x, fileBlob.data, (err) => {
-                                if (err) {
-                                    throw new Error(err);
-                                }
-                            });
-                        });
+        await resp.data.pipe(fs.createWriteStream(fullpath));
+    }
+
+    return filename;
+}
+
+async function loadAssets(base_url, app, response, options) {
+    if (options && options.assets && Array.isArray(options.assets)) {
+        for await (asset of options.assets) {
+            if (response[asset]) {
+                const assets = [];
+                for await (a of response[asset]) {
+                    assets.push(await download(base_url, app, a));
                 }
-
-                return path + x;
-            });
+                response[asset] = assets;
+            }
         }
-    });
-
+    }
     return response;
 }
-*/
 
 module.exports = async ({client_id, client_secret, base_url}) => {
     const access_token = await getToken(client_id, client_secret, base_url);
     const app = client_id.split(":")[0];
-    return schema => getContent(access_token, base_url, app, schema);
+    return async (schema, options = {}) => await getContent(access_token, base_url, app, schema, options);
 };

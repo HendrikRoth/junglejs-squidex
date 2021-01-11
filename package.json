@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "junglejs squidex example",
   "scripts": {
-    "start": "node app.js",
+    "start": "node --trace-warnings app.js",
     "build": "node build.js"
   },
   "repository": {
